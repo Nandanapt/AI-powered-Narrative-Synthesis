@@ -8,3 +8,5 @@ Preprocessing: Text might need cleaning (e.g., removing unwanted characters or i
 Fine-Tuning the Model: GPT-2 can generate impressive narratives on its own, but fine-tuning it on your specific dataset (fairy tales, bedtime stories, etc.) will help it understand the patterns, themes, and stylistic elements of these genres.
 
 Genre-specific Adaptation: Adjust the model’s parameters and training to focus on specific genres (like “superpower stories” or “animal tales”) so that it produces coherent and relevant stories.
+Frontend:CSS ,HTML
+Backend:Django(Python)
