@@ -1,0 +1,244 @@
+Flask
+openai
+python-dotenv
+
+
+
+'''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Narrative Synthesis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; }
+    textarea, input, button { width: 100%; margin: 10px 0; padding: 10px; }
+    #story { background: white; padding: 20px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>AI-Powered Narrative Synthesis</h1>
+  <textarea id="prompt" rows="4" placeholder="Enter your story prompt here..."></textarea>
+  <button onclick="generateStory()">Generate Story</button>
+  <div id="story"></div>
+
+  <script>
+    async function generateStory() {
+      const prompt = document.getElementById("prompt").value;
+      const storyDiv = document.getElementById("story");
+      storyDiv.innerHTML = "Generating story...";
+
+      const response = await fetch('/generate_story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await response.json();
+      if (data.story) {
+        storyDiv.innerHTML = `<p>${data.story.replace(/\n/g, "<br>")}</p>`;
+      } else {
+        storyDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
+'''
+
+
+
+
+
+
+
+////
+
+from flask import Flask, render_template, request, jsonify
+import requests
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Print the API key to confirm it's loaded correctly
+print("Loaded API Key:", os.getenv('HF_API_KEY'))
+
+# Initialize Flask app
+app = Flask(__name__)
+
+# Hugging Face API URL for the model
+HF_API_URL = "https://api-inference.huggingface.co/models/bigscience/bloom"
+
+# Hugging Face headers with the API key
+HF_HEADERS = {
+    "Authorization": f"Bearer {os.getenv('HF_API_KEY')}"
+}
+
+# Function to generate story using Hugging Face API
+def generate_story_with_huggingface(prompt):
+    payload = {
+        "inputs": f"Write a detailed story based on: {prompt}",
+        "parameters": {
+            "max_new_tokens": 500,
+            "temperature": 0.8,
+            "do_sample": True
+        }
+    }
+
+    # Make POST request to Hugging Face API
+    response = requests.post(HF_API_URL, headers=HF_HEADERS, json=payload)
+
+    # Debugging: Print status code and response text
+    print("STATUS CODE:", response.status_code)
+    print("RESPONSE TEXT:", response.text)  # This will show the raw error message if any
+
+    # Check if the response is successful (status code 200)
+    if response.status_code != 200:
+        return "Story generation failed. (API error)"
+
+    # Try to parse the response and extract the generated text
+    try:
+        response_data = response.json()
+        print("RESPONSE DATA:", response_data)  # This will help us understand the structure
+
+        # If the response is a list, extract the text from the first entry
+        if isinstance(response_data, list):
+            return response_data[0].get('generated_text', 'No text generated.')
+        else:
+            return response_data.get('generated_text', 'Story generation failed.')
+
+    except Exception as e:
+        print(f"Error parsing the response: {str(e)}")
+        return "Story generation failed. (Response parsing error)"
+
+# Route for the main page (index.html)
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Route to handle the story generation request
+@app.route('/generate_story', methods=['POST'])
+def generate_story():
+    data = request.get_json()
+    prompt = data['prompt']
+
+    try:
+        # Generate story with Hugging Face API
+        story = generate_story_with_huggingface(prompt)
+        return jsonify({"story": story})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Run the Flask app
+if __name__ == "__main__":
+    app.run(debug=True)
+///
+
+
+
+
+
+
+
+
+
+
+
+
+/////
+import os
+import requests
+from flask import Flask, render_template, request, jsonify
+from dotenv import load_dotenv
+from transformers import BloomForCausalLM, BloomTokenizerFast, Trainer, TrainingArguments
+from datasets import load_dataset
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Initialize Flask app
+app = Flask(__name__)
+
+# Initialize the model and tokenizer
+model_name = "bigscience/bloom"
+tokenizer = BloomTokenizerFast.from_pretrained(model_name)
+model = BloomForCausalLM.from_pretrained(model_name)
+
+# Prepare dataset for fine-tuning (Example: load a dataset of stories)
+def load_and_prepare_data():
+    # You can replace with your dataset
+    dataset = load_dataset("wikitext", "wikitext-103-raw-v1")  # Example dataset
+    train_data = dataset['train']
+    return train_data
+
+# Tokenize the dataset
+def tokenize_data(dataset):
+    def tokenize_function(examples):
+        return tokenizer(examples['text'], return_tensors="pt", padding=True, truncation=True)
+
+    return dataset.map(tokenize_function, batched=True)
+
+# Fine-tuning function
+def fine_tune_model(train_data):
+    training_args = TrainingArguments(
+        output_dir="./results",          # output directory
+        evaluation_strategy="epoch",     # evaluation strategy
+        learning_rate=2e-5,              # learning rate
+        per_device_train_batch_size=4,   # batch size
+        num_train_epochs=1,              # number of training epochs
+        weight_decay=0.01,               # strength of weight decay
+    )
+
+    trainer = Trainer(
+        model=model,                         # the model to train
+        args=training_args,                  # training arguments
+        train_dataset=train_data,            # training dataset
+    )
+
+    trainer.train()
+
+# Route to handle model training (this can be triggered manually)
+@app.route('/train_model', methods=['POST'])
+def train_model():
+    try:
+        # Load and prepare the data
+        train_data = load_and_prepare_data()
+        tokenized_train_data = tokenize_data(train_data)
+        
+        # Fine-tune the model
+        fine_tune_model(tokenized_train_data['train'])
+        
+        return jsonify({"message": "Model training completed!"})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Route for the main page (index.html)
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+# Route to handle the story generation request
+@app.route('/generate_story', methods=['POST'])
+def generate_story():
+    data = request.get_json()
+    prompt = data['prompt']
+
+    # Generate story using the fine-tuned model
+    inputs = tokenizer(prompt, return_tensors="pt")
+    generated_ids = model.generate(inputs['input_ids'], max_length=500)
+
+    generated_story = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+    
+    return jsonify({"story": generated_story})
+
+# Run the Flask app
+if __name__ == "__main__":
+    app.run(debug=True)
+////

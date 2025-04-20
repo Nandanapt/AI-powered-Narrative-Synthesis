@@ -1,0 +1,104 @@
+body {
+    margin: 0;
+    font-family: 'Fredoka', sans-serif;
+    background: url("night_sky.jpg") no-repeat center center fixed;
+    background-size: cover;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  
+  h1 {
+    font-size: 3.5rem; /* Larger font size */
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    letter-spacing: 2px; /* Add some letter spacing for style */
+  }
+  
+  .prompt-card {
+    background: rgba(255, 255, 255, 0.1); /* semi-transparent */
+    border: 2px solid white;
+    border-radius: 30px; /* Increased border radius */
+    padding: 50px;
+    width: 100%;
+    max-width: 650px; /* Bigger width */
+    text-align: center;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.2); /* Enhanced box shadow */
+  }
+  
+  textarea {
+    width: 100%;
+    height: 250px; /* Larger height */
+    padding: 20px;
+    font-size: 1.2rem; /* Larger font size */
+    color: white;
+    background: transparent; /* Transparent background */
+    border: 2px solid white; /* White border */
+    border-radius: 20px;
+    resize: none;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+    outline: none;
+    caret-color: #ffffff;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  textarea::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+    font-size: 1.1rem;
+  }
+  
+  textarea:focus {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+  }
+  
+  button {
+    padding: 12px 25px; /* Larger padding */
+    font-size: 1.2rem; /* Larger font size */
+    color: #fff;
+    background: rgba(255, 255, 255, 0.3);
+    border: 2px solid white;
+    border-radius: 12px; /* Smoother rounded corners */
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+  
+  button:hover {
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(1.05); /* Button scale effect on hover */
+  }
+  
+  #story {
+    margin-top: 40px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    max-width: 650px;
+    width: 100%;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  @keyframes fadeInScale {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .heading {
+    animation: fadeInScale 1.5s ease-in-out;
+  }
+  

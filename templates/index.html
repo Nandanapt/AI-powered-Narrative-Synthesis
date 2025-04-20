@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Narrative Synthesis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <h1 class="heading">AI-Powered Narrative Synthesis</h1>
+
+
+  <div class="prompt-card">
+    <textarea id="prompt" placeholder="Enter your story prompt here..."></textarea>
+    <button onclick="generateStory()">Generate Story</button>
+  </div>
+  
+
+  <div id="story"></div>
+
+  <script>
+    async function generateStory() {
+      const prompt = document.getElementById("prompt").value;
+      const storyDiv = document.getElementById("story");
+      storyDiv.classList.remove("animate"); // reset animation
+      storyDiv.innerHTML = "Generating story...";
+
+      const response = await fetch('/generate_story', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await response.json();
+      if (data.story) {
+        storyDiv.innerHTML = `<p>${data.story.replace(/\n/g, "<br>")}</p>`;
+        void storyDiv.offsetWidth; // force reflow for animation
+        storyDiv.classList.add("animate");
+      } else {
+        storyDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
